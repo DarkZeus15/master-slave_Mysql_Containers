@@ -1,0 +1,107 @@
+version: '3'
+services:
+  mysql_master:
+    image: mysql:8.0
+    env_file:
+      - ./master/mysql_master.env
+    container_name: "mysql_master"
+    restart: "no"
+    ports:
+      - 4406:3306
+    volumes:
+      - ./master/conf/mysql.conf.cnf:/etc/mysql/conf.d/mysql.conf.cnf
+      - ./master/data:/var/lib/mysql
+    networks:
+      - overlay
+
+  mysql_slave:
+    image: mysql:8.0
+    env_file:
+      - ./slave/mysql_slave.env
+    container_name: "mysql_slave"
+    restart: "no"
+    ports:
+      - 5506:3306
+    depends_on:
+      - mysql_master
+    volumes:
+      - ./slave/conf/mysql.conf.cnf:/etc/mysql/conf.d/mysql.conf.cnf
+      - ./slave/data:/var/lib/mysql
+    networks:
+      - overlay
+
+networks:
+  overlay:
+
+# ____________________________________________________________________________________________________
+# Extra Long version
+# ====================================================================================================
+# 
+# version: '3'      # Specifies version of docker compose file format
+# services:
+#   mysql_master:                                                             # 1st service mysql_master
+#     image: mysql:8.0                                                        # mysql docker image version 8
+#     environment:
+#       - MYSQL_ROOT_PASSWORD=111
+#       - MYSQL_PORT=3306
+#       - MYSQL_USER=mydb_user
+#       - MYSQL_PASSWORD=mydb_pwd
+#       - MYSQL_DATABASE=mydb
+#       - MYSQL_LOWER_CASE_TABLE_NAMES=0
+#     container_name: "mysql_master"
+#     restart: "no"                                                           # Sets container restart policy as no
+#     ports:
+#       - 4406:3306                                                           # Maps port 4406 of host to 3306 inside container
+#     volumes:
+#       - ./master/conf/mysql.conf.cnf:/etc/mysql/conf.d/mysql.conf.cnf       # Mounts config file from host into the container
+#       - ./master/data:/var/lib/mysql                                        # Mounts Mysql Data directory from host into the container
+#     networks:
+#       - overlay                                                             # Specifies the network should be a part of "overlay" network
+#   mysql_slave:
+#     image: mysql:8.0
+#     env_file:
+#       - ./slave/mysql_slave.env
+#     container_name: "mysql_slave"
+#     restart: "no"
+#     ports:
+#       - 5506:3306
+#     depends_on:
+#       - mysql_master
+#     volumes:
+#       - ./slave/conf/mysql.conf.cnf:/etc/mysql/conf.d/mysql.conf.cnf
+#       - ./slave/data:/var/lib/mysql
+#     networks:
+#       - overlay
+# networks:
+#   overlay:
+
+
+
+# ====================================================================================================
+# env file Dependancy
+# ____________________________________________________________________________________________________
+
+# cat ./slave/mysql_slave.env
+
+# MYSQL_ROOT_PASSWORD=111
+# MYSQL_PORT=3306
+# MYSQL_USER=mydb_slave_user
+# MYSQL_PASSWORD=mydb_slave_pwd
+# MYSQL_DATABASE=mydb
+# MYSQL_LOWER_CASE_TABLE_NAMES=0
+# ____________________________________________________________________________________________________
+
+# ====================================================================================================
+# Volume Dependancy
+# ____________________________________________________________________________________________________
+# Filename : ./master/conf/mysql.conf.cnf
+
+# [mysqld]                                                # Specifies below configuration is SPECIFICALLY applicable for mysql daemon (mysqld) in container
+
+# skip-name-resolve                                       # Skips the DNS name resolution for incomming client connections. Performance related step
+# default_authentication_plugin = mysql_native_password   # sets default authentication to mysql_native_plugin.
+
+# server-id = 1                                           # identifies each server in replication setup. Unique field.
+# log_bin = 1                                             # Enables binary logging. Most IMP in mysql replication as it Records changes in DB and can be replicated to other servers.
+# binlog_format = ROW                                     # Specifies binary log format to "ROW". Gives more detailed record of modification.
+# binlog_do_db = mydb                                     # Specifies which database to replicate.
