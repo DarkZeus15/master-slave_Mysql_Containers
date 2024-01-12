@@ -34,7 +34,7 @@ networks:
   overlay:
 
 # ____________________________________________________________________________________________________
-# Extra Long version
+# Extra Long version with Explaination
 # ====================================================================================================
 # 
 # version: '3'      # Specifies version of docker compose file format
